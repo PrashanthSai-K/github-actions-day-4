@@ -1,0 +1,44 @@
+name: S3 Bucket Creation
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  S3_BUCKET_NAME: sai-github-actions-s3
+  ENVIRONMENT: dev
+
+jobs:
+  create-s3-bucket:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Create S3 Bucket
+        run: |
+          if aws s3api head-bucket --bucket $S3_BUCKET_NAME 2>/dev/null;then
+            aws s3api create-bucket --bucket $S3_BUCKET_NAME --region us-east-1 --create-bucket-configuration LocationConstraint=us-east-1
+          else
+            echo "Bucket $S3_BUCKET_NAME already exists"
+          fi
+
+      - name: Enable bucket versioning
+        run: |
+          if [ "$ENVIRONMENT" == "prod" ]; then
+            aws s3api put-bucket-versioning --bucket $S3_BUCKET_NAME --versioning-configuration Status=Enabled
+          else
+            echo "Versioning not enabled for non-prod environment"
+          fi
+
+      - name: Upload sample file to S3
+        run: |
+          aws s3 cp ./task-2/sample-2.txt s3://$S3_BUCKET_NAME/
