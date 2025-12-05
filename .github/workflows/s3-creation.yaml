@@ -31,9 +31,9 @@ jobs:
       - name: Create S3 Bucket
         run: |
           if aws s3api head-bucket --bucket $S3_BUCKET_NAME 2>/dev/null;then
-            aws s3api create-bucket --bucket $S3_BUCKET_NAME --region us-east-1 --create-bucket-configuration LocationConstraint=us-east-1
-          else
             echo "Bucket $S3_BUCKET_NAME already exists"
+          else
+            aws s3api create-bucket --bucket $S3_BUCKET_NAME --region us-east-1 --create-bucket-configuration LocationConstraint=us-east-1
           fi
 
       - name: Enable bucket versioning
